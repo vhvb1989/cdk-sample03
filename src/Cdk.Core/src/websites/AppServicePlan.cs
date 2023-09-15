@@ -3,7 +3,7 @@ using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Cdk.Core;
 
-namespace Cdk.Websites
+namespace Cdk.AppService
 {
     public class AppServicePlan : Resource<AppServicePlanData>
     {

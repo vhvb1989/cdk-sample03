@@ -30,8 +30,8 @@ namespace Cdk.KeyVault
             connectionString.Database.Scope!.Resources.Add(this);
             connectionString.Database.Scope!.ResourceReferences.Add(Scope!);
             connectionString.Database.Scope!.ResourceReferences.Add(connectionString.Password);
-            connectionString.Database.Scope!.ModuleDependencies.Add(scope!);
             Scope?.Resources.Remove(this);
+            connectionString.Database.Scope!.ModuleDependencies.Add(scope!);
         }
 
         private static string GetName(string? name) => name is null ? $"kvs-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";

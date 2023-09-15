@@ -4,7 +4,7 @@ using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Models;
 using Cdk.Core;
 
-namespace Cdk.Websites
+namespace Cdk.AppService
 {
     public enum Runtime
     {
@@ -32,16 +32,38 @@ namespace Cdk.Websites
                     appCommandLine: runtime == Runtime.Dotnetcore ? string.Empty : "./entrypoint.sh -o ./env-config.js && pm2 serve /home/site/wwwroot --no-daemon --spa",
                     cors: new AppServiceCorsSettings()
                     {
-                        AllowedOrigins = 
+                        AllowedOrigins =
                         {
                             "https://portal.azure.com",
                             "https://ms.portal.azure.com"
                         }
-                    }) ,
+                    }),
                 isHttpsOnly: true,
                 identity: new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned)))
         {
             ModuleDependencies.Add(appServicePlan);
+            var appSettings = runtime == Runtime.Dotnetcore
+                ? new Dictionary<string, string>()
+                {
+                    { "AZURE_SQL_CONNECTION_STRING_KEY", "_p_.sqlServer.outputs.connectionStringKey" }
+                }
+                : new Dictionary<string, string>()
+                {
+                    { "REACT_APP_API_BASE_URL", "_p_.api.outputs.SERVICE_API_URI" }
+                };
+            _ = new ApplicationSettingsResource(this, appSettings);
+        }
+
+        public void AddApplicationSetting(string key, string value)
+        {
+            var appSetting = Resources.First(r => r is ApplicationSettingsResource) as ApplicationSettingsResource;
+            appSetting!.AddApplicationSetting(key, value);
+        }
+
+        public void AddApplicationSetting(string key, Parameter value)
+        {
+            var appSetting = Resources.First(r => r is ApplicationSettingsResource) as ApplicationSettingsResource;
+            appSetting!.AddApplicationSetting(key, value);
         }
     }
 }

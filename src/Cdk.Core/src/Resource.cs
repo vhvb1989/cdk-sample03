@@ -40,8 +40,11 @@ namespace Cdk.Core
             ResourceType = resourceType;
             Id = scope is null ? ResourceIdentifier.Root : scope is ResourceGroup ? scope.Id.AppendProviderResource(ResourceType.Namespace, ResourceType.GetLastType(), resourceName) : scope.Id.AppendChildResource(ResourceType.GetLastType(), resourceName);
             Name = GetHash();
-            Outputs.Add(new Output($"APP_{Name}_ID", Id!, true));
-            Outputs.Add(new Output($"APP_{Name}_NAME", resourceName, true));
+            if (GetType().IsPublic)
+            {
+                Outputs.Add(new Output($"APP_{Name}_ID", Id!, true));
+                Outputs.Add(new Output($"APP_{Name}_NAME", resourceName, true));
+            }
         }
 
         private bool IsChildResource => Scope is not null && Scope is not ResourceGroup && Scope is not Subscription;
