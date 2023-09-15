@@ -18,6 +18,8 @@ namespace Cdk.AppService
         public const string ResourceTypeName = "Microsoft.Web/sites";
         private static string GetName(string? name) => name is null ? $"webSite-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
 
+        private ApplicationSettingsResource AppSettings { get; }
+
         public WebSite(ResourceGroup scope, string resourceName, AppServicePlan appServicePlan, Runtime runtime, string runtimeVersion, string version = "2021-02-01", AzureLocation? location = default)
             : base(scope, GetName(resourceName), ResourceTypeName, version, ArmAppServiceModelFactory.WebSiteData(
                 name: GetName(resourceName),
@@ -50,19 +52,23 @@ namespace Cdk.AppService
                     { "ENABLE_ORYX_BUILD", "True"}
                 }
                 : new Dictionary<string, string>();
-            _ = new ApplicationSettingsResource(this, appSettings);
+            AppSettings = new ApplicationSettingsResource(this, appSettings);
         }
 
         public void AddApplicationSetting(string key, string value)
         {
-            var appSetting = Resources.First(r => r is ApplicationSettingsResource) as ApplicationSettingsResource;
-            appSetting!.AddApplicationSetting(key, value);
+            AppSettings.AddApplicationSetting(key, value);
         }
 
         public void AddApplicationSetting(string key, Parameter value)
         {
-            var appSetting = Resources.First(r => r is ApplicationSettingsResource) as ApplicationSettingsResource;
-            appSetting!.AddApplicationSetting(key, value);
+            AppSettings.AddApplicationSetting(key, value);
+        }
+
+        public void AddLogConfig(string resourceName)
+        {
+            var logConfig = new WebSiteConfigLogs(this, resourceName);
+            logConfig.AddDependency(AppSettings);
         }
     }
 }

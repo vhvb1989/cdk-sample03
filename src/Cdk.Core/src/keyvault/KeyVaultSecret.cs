@@ -33,6 +33,6 @@ namespace Cdk.KeyVault
             connectionString.Database.Scope!.ModuleDependencies.Add(scope!);
         }
 
-        private static string GetName(string? name) => name is null ? $"kvs-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
+        private static string GetName(string? name) => name is null ? $"kvs-{Infrastructure.Seed}" : name;
     }
 }

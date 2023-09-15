@@ -13,6 +13,13 @@ namespace Cdk.Core
         public IList<Parameter> Parameters { get; }
 
         protected internal IList<Resource> ResourceReferences { get; }
+        
+        private IList<Resource> Dependencies { get; }
+        
+        internal void AddDependency(Resource resource)
+        {
+            Dependencies.Add(resource);
+        }
 
         public IList<Output> Outputs { get; }
         public IList<Resource> ModuleDependencies { get; }
@@ -38,6 +45,7 @@ namespace Cdk.Core
             Outputs = new List<Output>();
             ResourceReferences = new List<Resource>();
             ModuleDependencies = new List<Resource>();
+            Dependencies = new List<Resource>();
             ResourceType = resourceType;
             Id = scope is null ? ResourceIdentifier.Root : scope is ResourceGroup ? scope.Id.AppendProviderResource(ResourceType.Namespace, ResourceType.GetLastType(), resourceName) : scope.Id.AppendChildResource(ResourceType.GetLastType(), resourceName);
             Name = GetHash();
@@ -151,6 +159,16 @@ namespace Cdk.Core
 
             if (IsChildResource && this is not DeploymentScript)
                 stream.Write(Encoding.UTF8.GetBytes($"  parent: {Scope!.Name}{Environment.NewLine}"));
+
+            if(Dependencies.Count > 0)
+            {
+                stream.Write(Encoding.UTF8.GetBytes($"  dependsOn: [{Environment.NewLine}"));
+                foreach(var dependency in Dependencies)
+                {
+                    stream.Write(Encoding.UTF8.GetBytes($"    {dependency.Name}{Environment.NewLine}"));
+                }
+                stream.Write(Encoding.UTF8.GetBytes($"  ]{Environment.NewLine}"));
+            }
 
             WriteLines(0, ModelSerializer.Serialize(Properties, options), stream, this);
             stream.Write(Encoding.UTF8.GetBytes($"}}{Environment.NewLine}"));
