@@ -3,6 +3,7 @@ using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Models;
 using Cdk.Core;
+using Cdk.ResourceManager;
 
 namespace Cdk.AppService
 {
@@ -17,7 +18,7 @@ namespace Cdk.AppService
         public const string ResourceTypeName = "Microsoft.Web/sites";
         private static string GetName(string? name) => name is null ? $"webSite-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
 
-        public WebSite(Resource? scope, string resourceName, AppServicePlan appServicePlan, Runtime runtime, string runtimeVersion, string version = "2021-02-01", AzureLocation? location = default)
+        public WebSite(ResourceGroup scope, string resourceName, AppServicePlan appServicePlan, Runtime runtime, string runtimeVersion, string version = "2021-02-01", AzureLocation? location = default)
             : base(scope, GetName(resourceName), ResourceTypeName, version, ArmAppServiceModelFactory.WebSiteData(
                 name: GetName(resourceName),
                 location: GetLocation(location),
@@ -45,12 +46,10 @@ namespace Cdk.AppService
             var appSettings = runtime == Runtime.Dotnetcore
                 ? new Dictionary<string, string>()
                 {
-                    { "AZURE_SQL_CONNECTION_STRING_KEY", "_p_.sqlServer.outputs.connectionStringKey" }
+                    { "SCM_DO_BUILD_DURING_DEPLOYMENT", "False"},
+                    { "ENABLE_ORYX_BUILD", "True"}
                 }
-                : new Dictionary<string, string>()
-                {
-                    { "REACT_APP_API_BASE_URL", "_p_.api.outputs.SERVICE_API_URI" }
-                };
+                : new Dictionary<string, string>();
             _ = new ApplicationSettingsResource(this, appSettings);
         }
 

@@ -1,10 +1,9 @@
-﻿using Azure.ResourceManager.Resources.Models;
+﻿using Cdk.AppService;
 using Cdk.Core;
 using Cdk.KeyVault;
 using Cdk.ResourceManager;
 using Cdk.Resources;
 using Cdk.Sql;
-using Cdk.Websites;
 
 // Defaults coming from env:
 // AZURE_ENV_NAME
@@ -33,24 +32,31 @@ var sqlServer = new SqlServer(resourceGroup, "sql");
 sqlServer.AssignParameter(nameof(sqlServer.Properties.AdministratorLoginPassword), sqlAdminPasswordParam);
 
 // SQL Server config - Database / Firewall / deployment
-var sqlDb = new SqlDatabase(sqlServer);
-new KeyVaultSecret(keyVault, "connectionString", sqlDb.GetConnectionString(dbPasswordSecret));
+var sqlDb = new SqlDatabase(sqlServer, "Todo");
+var connString = new KeyVaultSecret(keyVault, "connectionString", sqlDb.GetConnectionString(dbUserPasswordParam));
 new SqlFirewallRule(sqlServer, "sqlRules");
 new DeploymentScript(resourceGroup, "cliScript", sqlDb, dbUserPasswordParam, sqlAdminPasswordParam);
 
 // ** Service plan
 var appServicePlan = new AppServicePlan(resourceGroup, "appServicePlan");
 
+// api - api
+var apiApp = new WebSite(resourceGroup, "api", appServicePlan, Runtime.Dotnetcore, "6.0");
+apiApp.Properties.Tags.Add("azd-service-name","api");
+// api app needs to know the name of the secret where the db - connection string is
+apiApp.AddApplicationSetting("AZURE_SQL_CONNECTION_STRING_KEY", connString.Outputs.First(o=> o.Name.Contains("NAME")).Value);
+apiApp.AddApplicationSetting("AZURE_KEY_VAULT_ENDPOINT", $"https://{keyVault.Outputs.First(o => o.Name.Contains($"{keyVault.Name}_NAME")).Value}.vault.azure.net/");
+var apiPrincipalId = apiApp.AddOutput("SERVICE_API_IDENTITY_PRINCIPAL_ID", nameof(apiApp.Properties.Identity.PrincipalId), isSecure: true);
+// Give api access to keyVault
+keyVault.AddAccessPolicy(apiPrincipalId);
+new WebSiteConfigLogs(apiApp, "apiLogs");
+
 // web - app
 var webApp = new WebSite(resourceGroup, "web", appServicePlan, Runtime.Node, "18-lts");
 webApp.Properties.Tags.Add("azd-service-name","web");
+// Set the apiUrl for the web
+webApp.AddApplicationSetting("REACT_APP_API_BASE_URL", $"https://{apiApp.Outputs.First(o=>o.Name.Contains($"{apiApp.Name}_NAME")).Value}.azurewebsites.net");
 new WebSiteConfigLogs(webApp, "webLogs");
-
-// api - api
-var apiApp = new WebSite(resourceGroup, "api", appServicePlan, Runtime.Dotnetcore, "6.0");
-
-apiApp.Properties.Tags.Add("azd-service-name","api");
-new WebSiteConfigLogs(apiApp, "apiLogs");
 
 // Handle output
 string path = args.Length > 0 ? args[0] : "./infra";

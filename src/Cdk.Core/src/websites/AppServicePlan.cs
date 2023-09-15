@@ -2,6 +2,7 @@
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Cdk.Core;
+using Cdk.ResourceManager;
 
 namespace Cdk.AppService
 {
@@ -11,7 +12,7 @@ namespace Cdk.AppService
 
         private static string GetName(string? name) => name is null ? $"appServicePlan-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
 
-        public AppServicePlan(Resource? scope, string resourceName, string version = "2021-02-01", AzureLocation? location = default)
+        public AppServicePlan(ResourceGroup scope, string resourceName, string version = "2021-02-01", AzureLocation? location = default)
             : base(scope, GetName(resourceName), ResourceTypeName, version, ArmAppServiceModelFactory.AppServicePlanData(
                 name: GetName(resourceName),
                 location: GetLocation(location),

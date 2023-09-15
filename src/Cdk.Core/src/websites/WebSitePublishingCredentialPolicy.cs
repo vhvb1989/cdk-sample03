@@ -11,7 +11,7 @@ namespace Cdk.AppService
 
         private static string GetName(string? name) => name is null ? $"publishingCredentialPolicy-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
 
-        public WebSitePublishingCredentialPolicy(Resource? scope, string resourceName, string version = "2021-02-01", AzureLocation? location = default)
+        public WebSitePublishingCredentialPolicy(WebSite scope, string resourceName, string version = "2021-02-01", AzureLocation? location = default)
             : base(scope, GetName(resourceName), ResourceTypeName, version, ArmAppServiceModelFactory.CsmPublishingCredentialsPoliciesEntityData(
                 name: GetName(resourceName),
                 allow: false))

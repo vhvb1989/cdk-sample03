@@ -2,6 +2,7 @@
 using Azure.Core;
 using Azure.ResourceManager.Sql;
 using Azure.ResourceManager.Sql.Models;
+using Cdk.ResourceManager;
 
 namespace Cdk.Sql
 {
@@ -9,7 +10,7 @@ namespace Cdk.Sql
     {
         private const string ResourceTypeName = "Microsoft.Sql/servers";
 
-        public SqlServer(Resource? scope, string name, string? version = default, AzureLocation? location = default)
+        public SqlServer(ResourceGroup scope, string name, string? version = default, AzureLocation? location = default)
             : base(scope, GetName(name), ResourceTypeName, version ?? "2022-08-01-preview", ArmSqlModelFactory.SqlServerData(
                 name: GetName(name),
                 location: GetLocation(location),

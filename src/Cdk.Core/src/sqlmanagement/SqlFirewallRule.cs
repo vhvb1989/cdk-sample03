@@ -8,7 +8,7 @@ namespace Cdk.Sql
     {
         private const string ResourceTypeName = "Microsoft.Sql/servers/firewallRules";
 
-        public SqlFirewallRule(Resource? scope, string? name = default, string version = "2020-11-01-preview")
+        public SqlFirewallRule(SqlServer scope, string? name = default, string version = "2020-11-01-preview")
             : base(scope, GetName(name), ResourceTypeName, version, ArmSqlModelFactory.SqlFirewallRuleData(
                 name: GetName(name),
                 resourceType: ResourceTypeName,

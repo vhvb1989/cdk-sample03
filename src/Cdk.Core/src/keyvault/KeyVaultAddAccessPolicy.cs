@@ -27,7 +27,7 @@ namespace Cdk.KeyVault
                         })
                 }))
         {
-            ParameterOverrides.Add("objectId", principalIdParameter.Name);
+            ParameterOverrides.Add("objectId", principalIdParameter.IsFromOutput ? principalIdParameter.Value! : principalIdParameter.Name);
         }
     }
 }

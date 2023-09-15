@@ -9,12 +9,12 @@ namespace Cdk.ResourceManager
 {
     public class ResourceGroup : Resource<ResourceGroupData>, IModelSerializable<ResourceGroup>
     {
-        private const string ResourceTypeName = "Microsoft.Resources/resourceGroups";
+        internal readonly static ResourceType ResourceType = "Microsoft.Resources/resourceGroups";
 
         public ResourceGroup(string? name = default, string version = "2023-07-01", AzureLocation? location = default)
-            : base(Infrastructure.DefaultSubscription, GetName(name), ResourceTypeName, version, ResourceManagerModelFactory.ResourceGroupData(
+            : base(Infrastructure.DefaultSubscription, GetName(name), ResourceType, version, ResourceManagerModelFactory.ResourceGroupData(
                 name: GetName(name),
-                resourceType: ResourceTypeName,
+                resourceType: ResourceType,
                 tags: new Dictionary<string, string> { { "azd-env-name", Environment.GetEnvironmentVariable("AZURE_ENV_NAME") ?? throw new Exception("No environment variable 'AZURE_ENV_NAME' was found") } },
                 location: GetLocation(location)))
         {

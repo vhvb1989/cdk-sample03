@@ -7,9 +7,9 @@ namespace Cdk.AppService
     {
         private const string ResourceTypeName = "Microsoft.Web/sites/config";
 
-        public ApplicationSettingsResource(Resource scope, IDictionary<string, string> appSettings, string version = "2021-02-01")
+        public ApplicationSettingsResource(WebSite scope, IDictionary<string, string> appSettings, string version = "2021-02-01")
             : base(scope, "appsettings", ResourceTypeName, version, ArmAppServiceModelFactory.AppServiceConfigurationDictionary(
-                kind: "appsettings",
+                name: "appsettings",
                 properties: appSettings))
         {
         }
@@ -21,7 +21,7 @@ namespace Cdk.AppService
 
         public void AddApplicationSetting(string key, Parameter value)
         {
-            Properties.Properties.Add(key, $"_p_.{value}");
+            Properties.Properties.Add(key, $"_p_.{value.Name}");
         }
     }
 }

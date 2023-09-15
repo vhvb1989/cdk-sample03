@@ -1,7 +1,7 @@
-﻿using Cdk.Core;
-using Azure.Core;
+﻿using Azure.Core;
 using Azure.ResourceManager.KeyVault;
 using Azure.ResourceManager.KeyVault.Models;
+using Cdk.Core;
 using Cdk.ResourceManager;
 
 namespace Cdk.KeyVault
@@ -10,7 +10,7 @@ namespace Cdk.KeyVault
     {
         private const string ResourceTypeName = "Microsoft.KeyVault/vaults";
 
-        public KeyVault(Resource scope, string name, string version = "2023-02-01", AzureLocation? location = default)
+        public KeyVault(ResourceGroup scope, string name, string version = "2023-02-01", AzureLocation? location = default)
             : base(scope, GetName(name), ResourceTypeName, version, ArmKeyVaultModelFactory.KeyVaultData(
                 name: GetName(name),
                 resourceType: ResourceTypeName,
@@ -37,9 +37,13 @@ namespace Cdk.KeyVault
             return name is null ? $"kv-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
         }
 
-        public void AddAccessPolicy(Parameter principalIdParameter)
+        public void AddAccessPolicy(Output output)
         {
-            _ = new KeyVaultAddAccessPolicy(this, principalIdParameter);
+            var accessPolicy = new KeyVaultAddAccessPolicy(this, new Parameter(output));
+
+            output.Source.Resources.Add(accessPolicy);
+            output.Source.ResourceReferences.Add(this);
+            Resources.Remove(accessPolicy);
         }
     }
 }

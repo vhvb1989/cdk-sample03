@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using Azure.Core.Serialization;
 using Cdk.ResourceManager;
+using Cdk.Resources;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -42,12 +43,13 @@ namespace Cdk.Core
             Name = GetHash();
             if (GetType().IsPublic)
             {
-                Outputs.Add(new Output($"APP_{Name}_ID", Id!, true));
-                Outputs.Add(new Output($"APP_{Name}_NAME", resourceName, true));
+                Outputs.Add(new Output($"APP_{Name}_ID", Id!, this, true));
+                Outputs.Add(new Output($"APP_{Name}_NAME", resourceName, this, true));
             }
         }
 
-        private bool IsChildResource => Scope is not null && Scope is not ResourceGroup && Scope is not Subscription;
+        protected virtual bool IsChildResource => Scope is not null && Scope is not ResourceGroup && Scope is not Subscription;
+        private bool IsChildResourceX => Id.ResourceType != ResourceIdentifier.Root.ResourceType && Id.ResourceType != ResourceGroup.ResourceType && Id.ResourceType != Subscription.ResourceType;
 
         public void AssignParameter(string propertyName, Parameter parameter)
         {
@@ -58,12 +60,14 @@ namespace Cdk.Core
         protected static AzureLocation GetLocation(AzureLocation? location = default) => location ?? Environment.GetEnvironmentVariable("AZURE_LOCATION") ?? AzureLocation.WestUS;
 
 
-        public void AddOutput(string name, string propertyName)
+        public Output AddOutput(string name, string propertyName, bool isLiteral = false, bool isSecure = false)
         {
             string? reference = GetReference(Properties.GetType(), propertyName, Name.ToCamelCase());
             if (reference is null)
                 throw new ArgumentNullException(nameof(propertyName), $"{propertyName} was not found in the property tree for {Properties.GetType().Name}");
-            Outputs.Add(new Output(name, reference));
+            var result = new Output(name, reference, this, isLiteral, isSecure);
+            Outputs.Add(result);
+            return result;
         }
 
         private static string? GetReference(Type type, string propertyName, string str)
@@ -109,7 +113,12 @@ namespace Cdk.Core
                 stream.Write(Encoding.UTF8.GetBytes($"  params: {{{Environment.NewLine}"));
                 foreach (var parameter in parametersToWrite)
                 {
-                    stream.Write(Encoding.UTF8.GetBytes($"    {parameter.Name}: {parameter.Name}{Environment.NewLine}"));
+                    var value = parameter.IsFromOutput
+                        ? parameter.IsLiteral
+                            ? $"'{parameter.Value}'"
+                            : parameter.Value
+                        : parameter.Name;
+                    stream.Write(Encoding.UTF8.GetBytes($"    {parameter.Name}: {value}{Environment.NewLine}"));
                 }
                 stream.Write(Encoding.UTF8.GetBytes($"  }}{Environment.NewLine}"));
             }
@@ -140,7 +149,7 @@ namespace Cdk.Core
 
             stream.Write(Encoding.UTF8.GetBytes($"resource {Name} '{ResourceType}@{Version}' = {{{Environment.NewLine}"));
 
-            if (IsChildResource)
+            if (IsChildResource && this is not DeploymentScript)
                 stream.Write(Encoding.UTF8.GetBytes($"  parent: {Scope!.Name}{Environment.NewLine}"));
 
             WriteLines(0, ModelSerializer.Serialize(Properties, options), stream, this);
@@ -185,7 +194,15 @@ namespace Cdk.Core
             GetAllOutputsRecursive(this, outputsToWrite, IsChildResource);
             foreach (var output in outputsToWrite)
             {
-                string value = output.IsLiteral ? $"'{output.Value}'" : output.Value;
+                string value;
+                if(output.IsLiteral || (!IsChildResource && (output.Source.Equals(this))))
+                {
+                    value = output.IsLiteral ? $"'{output.Value}'" : output.Value;
+                }
+                else
+                {
+                    value = $"{output.Source.Name}.outputs.{output.Name}";
+                }
                 string name = IsChildResource ? $"{Name}_{output.Name}" : output.Name;
                 stream.Write(Encoding.UTF8.GetBytes($"output {name} string = {value}{Environment.NewLine}"));
             }
@@ -215,6 +232,8 @@ namespace Cdk.Core
             GetAllParametersRecursive(this, parametersToWrite, IsChildResource);
             foreach (var parameter in parametersToWrite)
             {
+                if (this is ResourceGroup && parameter.IsFromOutput)
+                    continue;
                 string defaultValue = parameter.DefaultValue is null ? string.Empty : $" = '{parameter.DefaultValue}'";
 
                 if (parameter.IsSecure)

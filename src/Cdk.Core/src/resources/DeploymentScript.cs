@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using Azure.ResourceManager.Resources.Models;
 using Cdk.Core;
+using Cdk.ResourceManager;
 
 namespace Cdk.Resources
 {
@@ -9,7 +10,9 @@ namespace Cdk.Resources
         private const string ResourceTypeName = "Microsoft.Resources/deploymentScripts";
         private const string _defaultVersion = "2020-10-01";
 
-        public DeploymentScript(Resource? scope, string resourceName, IEnumerable<ScriptEnvironmentVariable> scriptEnvironmentVariables, string scriptContent, string version = _defaultVersion, AzureLocation? location = default)
+        protected override bool IsChildResource => true;
+
+        public DeploymentScript(ResourceGroup scope, string resourceName, IEnumerable<ScriptEnvironmentVariable> scriptEnvironmentVariables, string scriptContent, string version = _defaultVersion, AzureLocation? location = default)
             : base(scope, GetName(resourceName), ResourceTypeName, version, ArmResourcesModelFactory.AzureCliScript(
                 name: GetName(resourceName),
                 resourceType: ResourceTypeName,
@@ -23,7 +26,7 @@ namespace Cdk.Resources
         {
         }
 
-        public DeploymentScript(Resource? scope, string resourceName, Resource database, Parameter appUserPasswordSecret, Parameter sqlAdminPasswordSecret, string version = _defaultVersion, AzureLocation? location = default)
+        public DeploymentScript(ResourceGroup scope, string resourceName, Resource database, Parameter appUserPasswordSecret, Parameter sqlAdminPasswordSecret, string version = _defaultVersion, AzureLocation? location = default)
             : base(scope, GetName(resourceName), ResourceTypeName, version, ArmResourcesModelFactory.AzureCliScript(
                 name: GetName(resourceName),
                 resourceType: ResourceTypeName,
@@ -58,10 +61,10 @@ namespace Cdk.Resources
                         """))
         {
             ModuleDependencies.Add(database.Scope!);
-            ResourceReferences.Add(database);
-            ResourceReferences.Add(database.Scope!);
             Parameters.Add(appUserPasswordSecret);
             Parameters.Add(sqlAdminPasswordSecret);
+            scope.Resources.Remove(this);
+            database.Scope!.Resources.Add(this);
         }
 
         private static string GetName(string? name) => name is null ? $"deploymentScript-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";

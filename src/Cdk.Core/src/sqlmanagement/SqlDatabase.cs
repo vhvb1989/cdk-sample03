@@ -9,7 +9,7 @@ namespace Cdk.Sql
     {
         private const string ResourceTypeName = "Microsoft.Sql/servers/databases";
 
-        public SqlDatabase(Resource? scope, string? name = default, string version = "2022-08-01-preview", AzureLocation? location = default)
+        public SqlDatabase(SqlServer scope, string? name = default, string version = "2022-08-01-preview", AzureLocation? location = default)
             : base(scope, GetName(name), ResourceTypeName, version, ArmSqlModelFactory.SqlDatabaseData(
                 name: GetName(name),
                 resourceType: ResourceTypeName,
@@ -17,9 +17,12 @@ namespace Cdk.Sql
         {
         }
 
-        public ConnectionString GetConnectionString(Resource passwordSecret, string userName = "apiUser")
+        public ConnectionString GetConnectionString(Resource passwordSecret, string userName = "appUser")
             => new ConnectionString(this, passwordSecret, userName);
 
-        private static string GetName(string? name) => name is null ? $"db-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
+        public ConnectionString GetConnectionString(Parameter passwordSecret, string userName = "appUser")
+            => new ConnectionString(this, passwordSecret, userName);            
+
+        private static string GetName(string? name) => name is null ? $"db-{Infrastructure.Seed}" : name;
     }
 }

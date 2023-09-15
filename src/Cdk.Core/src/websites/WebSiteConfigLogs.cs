@@ -11,7 +11,7 @@ namespace Cdk.AppService
 
         private static string GetName(string? name) => name is null ? $"logs-{Infrastructure.Seed}" : $"{name}-{Infrastructure.Seed}";
 
-        public WebSiteConfigLogs(Resource? scope, string resourceName, string version = "2021-02-01", AzureLocation? location = default)
+        public WebSiteConfigLogs(WebSite scope, string resourceName, string version = "2021-02-01", AzureLocation? location = default)
             : base(scope, resourceName, ResourceTypeName, version, ArmAppServiceModelFactory.SiteLogsConfigData(
                 name: resourceName,
                 applicationLogs: new ApplicationLogsConfig()

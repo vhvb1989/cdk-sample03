@@ -9,7 +9,7 @@ namespace Cdk.KeyVault
     {
         private const string ResourceTypeName = "Microsoft.KeyVault/vaults/secrets";
 
-        public KeyVaultSecret(Resource? scope, string name, string version = "2023-02-01")
+        public KeyVaultSecret(KeyVault scope, string name, string version = "2023-02-01")
             : base(scope, GetName(name), ResourceTypeName, version, ArmKeyVaultModelFactory.KeyVaultSecretData(
                 name: GetName(name),
                 resourceType: ResourceTypeName,
@@ -19,7 +19,7 @@ namespace Cdk.KeyVault
         {
         }
 
-        public KeyVaultSecret(Resource? scope, string name, ConnectionString connectionString, string version = "2023-02-01")
+        public KeyVaultSecret(KeyVault scope, string name, ConnectionString connectionString, string version = "2023-02-01")
             : base(scope, GetName(name), ResourceTypeName, version, ArmKeyVaultModelFactory.KeyVaultSecretData(
                 name: GetName(name),
                 resourceType: ResourceTypeName,
@@ -29,7 +29,6 @@ namespace Cdk.KeyVault
         {
             connectionString.Database.Scope!.Resources.Add(this);
             connectionString.Database.Scope!.ResourceReferences.Add(Scope!);
-            connectionString.Database.Scope!.ResourceReferences.Add(connectionString.Password);
             Scope?.Resources.Remove(this);
             connectionString.Database.Scope!.ModuleDependencies.Add(scope!);
         }
