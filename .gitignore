@@ -1,0 +1,7 @@
+.azure
+infra/out/*.bicep
+infra/out/*/**
+infra/obj/**
+infra/bin/**
+src/Cdk.Core/src/bin/**
+src/Cdk.Core/src/obj/**
