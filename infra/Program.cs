@@ -57,6 +57,7 @@ webApp.AddLogConfig("weblogs");
 // Set the apiUrl for the web
 webApp.AddApplicationSetting("REACT_APP_API_BASE_URL", $"https://{apiApp.Id.Name}.azurewebsites.net");
 
+apiApp.Properties.SiteConfig.Cors.AllowedOrigins.Add($"https://{webApp.Id.Name}.azurewebsites.net");
 
 // Handle output
 string path = args.Length > 0 ? args[0] : "./infra";
