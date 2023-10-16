@@ -8,8 +8,8 @@
             "version": "16",
             "nodeGypDependencies": false
         },
-        "ghcr.io/azure/vhvb1989/azd:latest": {},
-        "ghcr.io/azure/vhvb1989/azd-persistence:0": {}
+        "ghcr.io/vhvb1989/azure-dev/azd:latest": {},
+        "ghcr.io/vhvb1989/azure-dev/azd-persistence:0": {}
     },
     "customizations": {
         "vscode": {
